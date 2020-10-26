@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddFriendHandler(c *gin.Context, service services.Manager) {
+func AddFriendHandler(c *gin.Context, service services.Service) {
 	var friends request.AddFriendRequest
 	if err := c.BindJSON(&friends); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

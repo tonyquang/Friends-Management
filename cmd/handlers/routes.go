@@ -21,7 +21,7 @@ func API(dbconn *sql.DB) http.Handler {
 		// chỉ áp dụng Midleware này cho group này
 		//g.Use(MyMidleWare())
 		g.POST("/", func(c *gin.Context) {
-			AddFriendHandler(c, *friendshipService)
+			AddFriendHandler(c, friendshipService)
 		})
 	}
 

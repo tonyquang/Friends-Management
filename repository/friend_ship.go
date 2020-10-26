@@ -4,44 +4,47 @@ import (
 	"database/sql"
 	"errors"
 	model_common "friends_management/models/respone"
-	"log"
 )
 
 // InsertFriendship insert new friendship to DB
-func InsertFriendship(dbconn *sql.DB, UserOne string, UserTwo string) (model_common.CommonRespone, error) {
-	tx, err := dbconn.Begin()
-	if err != nil {
-		log.Fatal(err)
-		return model_common.CommonRespone{Success: false}, err
-	}
+func InsertFriendship(dbconn *sql.DB, UserOne string, UserTwo string) (*model_common.CommonRespone, error) {
 
 	IsFriend, err := CheckIsFriendShip(dbconn, UserOne, UserTwo)
 
 	if err != nil {
-		return model_common.CommonRespone{Success: false}, errors.New("Check is friends error: " + err.Error())
+		return nil, errors.New("Check is friends error: " + err.Error())
 	}
 
 	if IsFriend == true {
-		return model_common.CommonRespone{Success: false}, errors.New(UserOne + " and " + UserTwo + " was friend")
+		return nil, errors.New(UserOne + " and " + UserTwo + " were friend")
 	}
 
-	defer tx.Rollback() // The rollback will be ignored if the tx has been committed later in the function.
-
-	stmt, err := tx.Prepare("INSERT INTO public.friends(user_one_email, user_two_email, update_status) VALUES (?, ?, ?)")
+	sqlStatement := `INSERT INTO public.friends(user_one_email, user_two_email, update_status) VALUES ($1, $2, $3)`
+	_, err = dbconn.Exec(sqlStatement, UserOne, UserTwo, true)
 	if err != nil {
-		return model_common.CommonRespone{Success: false}, errors.New("Fail Insert Friendship with error: " + err.Error())
+		return nil, errors.New("Check is friends error: " + err.Error())
 	}
-	defer stmt.Close() // Prepared statements take up server resources and should be closed after use.
+	return &model_common.CommonRespone{Success: true}, nil
+}
 
-	//When be Friend, Both Users can retrive update
-	if _, err := stmt.Exec(UserOne, UserTwo, true); err != nil {
-		return model_common.CommonRespone{Success: false}, err
+// DeleteFriendship friendship to DB
+func DeleteFriendship(dbconn *sql.DB, UserOne string, UserTwo string) (*model_common.CommonRespone, error) {
+	IsFriend, err := CheckIsFriendShip(dbconn, UserOne, UserTwo)
+
+	if err != nil {
+		return nil, errors.New("Check is friends error: " + err.Error())
 	}
-	if err := tx.Commit(); err != nil {
-		return model_common.CommonRespone{Success: false}, err
-	} else {
-		return model_common.CommonRespone{Success: true}, nil
+
+	if IsFriend == false {
+		return nil, errors.New(UserOne + " and " + UserTwo + " are not friends")
 	}
+
+	sqlStatement := `delete from friends as f where (f.user_one_email = $1 OR f.user_one_email = $2) AND (f.user_two_email = $1 OR f.user_two_email = $2)`
+	_, err = dbconn.Exec(sqlStatement, UserOne, UserTwo)
+	if err != nil {
+		return nil, errors.New("Check is friends error: " + err.Error())
+	}
+	return &model_common.CommonRespone{Success: true}, nil
 }
 
 func CheckIsFriendShip(dbconn *sql.DB, UserOne string, UserTwo string) (bool, error) {

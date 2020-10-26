@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	AddFriend(UserOne, UserTwo string) (model_common.CommonRespone, *model_common.ResponseError)
+	AddFriend(RequestAddFriend model_req.AddFriendRequest) (*model_common.CommonRespone, *model_common.ResponseError)
 }
 
 // Manager is the implementation of recurring service

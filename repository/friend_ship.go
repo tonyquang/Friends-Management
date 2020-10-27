@@ -92,7 +92,7 @@ func GetCommonFriendsListByEmail(dbconn *sql.DB, UserOne string, UserTwo string)
 	}
 
 	if IsFriend == false {
-		return nil, errors.New(UserOne + " and " + UserTwo + " is not friend")
+		return nil, errors.New(UserOne + " and " + UserTwo + " are not friend")
 	}
 
 	var row *sql.Rows
@@ -118,6 +118,53 @@ func GetCommonFriendsListByEmail(dbconn *sql.DB, UserOne string, UserTwo string)
 	list_friend.Success = true
 	list_friend.Count = count
 	return &list_friend, nil
+}
+
+//Subscribe Update between two user
+func UpdateSubscribeStatusFriend(dbconn *sql.DB, requestor string, tagert string) (*model_common.CommonRespone, error) {
+	IsFriend, err := CheckIsFriendShip(dbconn, requestor, tagert)
+	if err != nil {
+		return nil, errors.New("Check is friends error: " + err.Error())
+	}
+
+	if IsFriend == false {
+		return nil, errors.New(requestor + " and " + tagert + " are not friend")
+	}
+	err = UpdateStatusFriend(dbconn, requestor, tagert, true) // subscribe status is true
+	if err != nil {
+		return nil, err
+	} else {
+		return &model_common.CommonRespone{Success: true}, nil
+	}
+}
+
+//Subscribe Update between two user
+func BlockStatusFriend(dbconn *sql.DB, requestor string, tagert string) (*model_common.CommonRespone, error) {
+	IsFriend, err := CheckIsFriendShip(dbconn, requestor, tagert)
+	if err != nil {
+		return nil, errors.New("Check is friends error: " + err.Error())
+	}
+
+	if IsFriend == false {
+		return nil, errors.New(requestor + " and " + tagert + " are not friend")
+	}
+	err = UpdateStatusFriend(dbconn, requestor, tagert, false) // block status is false
+	if err != nil {
+		return nil, err
+	} else {
+		return &model_common.CommonRespone{Success: true}, nil
+	}
+}
+
+//Func Exce Update status friend
+func UpdateStatusFriend(dbconn *sql.DB, requestor string, tagert string, status bool) error {
+	stm := `Update friends SET update_status = $3 where (user_one_email = $1 OR user_two_email = $1) AND (user_one_email = $2 OR user_two_email = $2)`
+	_, err := dbconn.Exec(stm, requestor, tagert, status)
+	if err != nil {
+		return errors.New("Error Exec Update Status Friend: " + err.Error())
+	} else {
+		return nil
+	}
 }
 
 //Check Two email was friend?

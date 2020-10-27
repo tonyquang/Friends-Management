@@ -11,10 +11,12 @@ import (
 )
 
 type Service interface {
-	AddFriend(RequestAddFriend model_req.AddFriendRequest) (*model_common.CommonRespone, *model_common.ResponseError)
+	AddFriend(requestAddFriend model_req.AddFriendRequest) (*model_common.CommonRespone, *model_common.ResponseError)
 	UnFriend(friendship_id string) (*model_common.CommonRespone, *model_common.ResponseError)
 	ViewListFriendsByEmail(email string) (*model_common.ListFriendsRespone, *model_common.ResponseError)
-	ViewListCommonFriendsByEmail(RequestAddFriend model_req.AddFriendRequest) (*model_common.ListFriendsRespone, *model_common.ResponseError)
+	ViewListCommonFriendsByEmail(requestViewCommonFriend model_req.AddFriendRequest) (*model_common.ListFriendsRespone, *model_common.ResponseError)
+	SubscribeUpdate(requestUpdate model_req.HandleUpdateRequest) (*model_common.CommonRespone, *model_common.ResponseError)
+	BlockUpdate(requestUpdate model_req.HandleUpdateRequest) (*model_common.CommonRespone, *model_common.ResponseError)
 }
 
 // Manager is the implementation of recurring service
@@ -30,14 +32,14 @@ func NewManager(dbconn *sql.DB) *Manager {
 }
 
 // Add Friends Between Two User
-func (m *Manager) AddFriend(RequestAddFriend model_req.AddFriendRequest) (*model_common.CommonRespone, *model_common.ResponseError) {
+func (m *Manager) AddFriend(requestAddFriend model_req.AddFriendRequest) (*model_common.CommonRespone, *model_common.ResponseError) {
 
-	if len(RequestAddFriend.Friends) < 2 {
+	if len(requestAddFriend.Friends) < 2 {
 		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "User One Or User Two Not Allow Empty!"}
 	}
 
-	UserOne := RequestAddFriend.Friends[0]
-	UserTwo := RequestAddFriend.Friends[1]
+	UserOne := requestAddFriend.Friends[0]
+	UserTwo := requestAddFriend.Friends[1]
 
 	if m.checkIsValidEmail(UserOne) == false || m.checkIsValidEmail(UserTwo) == false {
 		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "Format user is not valid, User should be an email address!"}
@@ -87,13 +89,13 @@ func (m *Manager) ViewListFriendsByEmail(mailAdress string) (*model_common.ListF
 }
 
 //View list commmon friends of two user
-func (m *Manager) ViewListCommonFriendsByEmail(RequestAddFriend model_req.AddFriendRequest) (*model_common.ListFriendsRespone, *model_common.ResponseError) {
-	if len(RequestAddFriend.Friends) < 2 {
+func (m *Manager) ViewListCommonFriendsByEmail(requestViewCommonFriend model_req.AddFriendRequest) (*model_common.ListFriendsRespone, *model_common.ResponseError) {
+	if len(requestViewCommonFriend.Friends) < 2 {
 		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "User One Or User Two Not Allow Empty!"}
 	}
 
-	UserOne := RequestAddFriend.Friends[0]
-	UserTwo := RequestAddFriend.Friends[1]
+	UserOne := requestViewCommonFriend.Friends[0]
+	UserTwo := requestViewCommonFriend.Friends[1]
 
 	if m.checkIsValidEmail(UserOne) == false || m.checkIsValidEmail(UserTwo) == false {
 		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "Format user is not valid, User should be an email address!"}
@@ -106,6 +108,40 @@ func (m *Manager) ViewListCommonFriendsByEmail(RequestAddFriend model_req.AddFri
 	}
 
 	return listCommonFriend, nil
+}
+
+//subscribe to updates from an email address.
+func (m *Manager) SubscribeUpdate(requestUpdate model_req.HandleUpdateRequest) (*model_common.CommonRespone, *model_common.ResponseError) {
+	requestor := requestUpdate.Requestor
+	target := requestUpdate.Target
+
+	if m.checkIsValidEmail(requestor) == false || m.checkIsValidEmail(target) == false {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "Format user is not valid, User should be an email address!"}
+	}
+
+	commonRes, err := repo.UpdateSubscribeStatusFriend(m.dbconn, requestor, target)
+	if err != nil {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: err.Error()}
+	}
+
+	return commonRes, nil
+}
+
+//Block to updates from an email address.
+func (m *Manager) BlockUpdate(requestUpdate model_req.HandleUpdateRequest) (*model_common.CommonRespone, *model_common.ResponseError) {
+	requestor := requestUpdate.Requestor
+	target := requestUpdate.Target
+
+	if m.checkIsValidEmail(requestor) == false || m.checkIsValidEmail(target) == false {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "Format user is not valid, User should be an email address!"}
+	}
+
+	commonRes, err := repo.BlockStatusFriend(m.dbconn, requestor, target)
+	if err != nil {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: err.Error()}
+	}
+
+	return commonRes, nil
 }
 
 func (m *Manager) checkIsValidEmail(mail string) bool {

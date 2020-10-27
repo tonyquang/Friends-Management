@@ -41,6 +41,14 @@ func API(dbconn *sql.DB) http.Handler {
 			UnFriendHandler(c, friendshipService)
 		})
 
+		g.PUT("/subscribe/:requestor/:target", func(c *gin.Context) {
+			SubscribeUpdateHanler(c, friendshipService)
+		})
+
+		g.PUT("/block/:requestor/:target", func(c *gin.Context) {
+			BlockUpdateHanler(c, friendshipService)
+		})
+
 	}
 
 	return r

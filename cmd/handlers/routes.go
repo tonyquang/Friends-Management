@@ -33,6 +33,10 @@ func API(dbconn *sql.DB) http.Handler {
 			ListCommonFriendHandler(c, friendshipService)
 		})
 
+		g.GET("/friendsrecvupdate/:sender", func(c *gin.Context) {
+			ReceviceUserCanUpdate(c, friendshipService)
+		})
+
 		g.POST("/addfriend", func(c *gin.Context) {
 			AddFriendHandler(c, friendshipService)
 		})

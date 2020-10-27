@@ -96,3 +96,18 @@ func BlockUpdateHanler(c *gin.Context, service services.Service) {
 	res, err := service.BlockUpdate(request.HandleUpdateRequest{Requestor: requestor, Target: target})
 	utils.Respone(res, err, c)
 }
+
+func ReceviceUserCanUpdate(c *gin.Context, service services.Service) {
+	var sender string = ""
+
+	sender = c.Param("sender")
+
+	if sender == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Request not valid!"})
+		return
+	}
+
+	res, err := service.ViewListFriendsRecvUpdate(sender)
+
+	utils.Respone(res, err, c)
+}

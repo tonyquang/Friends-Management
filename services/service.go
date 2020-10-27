@@ -17,6 +17,7 @@ type Service interface {
 	ViewListCommonFriendsByEmail(requestViewCommonFriend model_req.AddFriendRequest) (*model_common.ListFriendsRespone, *model_common.ResponseError)
 	SubscribeUpdate(requestUpdate model_req.HandleUpdateRequest) (*model_common.CommonRespone, *model_common.ResponseError)
 	BlockUpdate(requestUpdate model_req.HandleUpdateRequest) (*model_common.CommonRespone, *model_common.ResponseError)
+	ViewListFriendsRecvUpdate(email string) (*model_common.ListFriendsRecviceUpdateRespone, *model_common.ResponseError)
 }
 
 // Manager is the implementation of recurring service
@@ -142,6 +143,21 @@ func (m *Manager) BlockUpdate(requestUpdate model_req.HandleUpdateRequest) (*mod
 	}
 
 	return commonRes, nil
+}
+
+//retrieve all email addresses that can receive updates from an email address.
+func (m *Manager) ViewListFriendsRecvUpdate(mail string) (*model_common.ListFriendsRecviceUpdateRespone, *model_common.ResponseError) {
+	if m.checkIsValidEmail(mail) == false {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "Format user is not email"}
+	}
+
+	listFriendsRecvUpdate, err := repo.GetAllEmailReceiveUpdate(m.dbconn, mail)
+
+	if err != nil {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: err.Error()}
+	}
+
+	return listFriendsRecvUpdate, nil
 }
 
 func (m *Manager) checkIsValidEmail(mail string) bool {

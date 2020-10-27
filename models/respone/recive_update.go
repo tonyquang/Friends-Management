@@ -1,6 +1,6 @@
 package response
 
 type ListFriendsRecviceUpdateRespone struct {
-	success    bool     `json:"success"`
-	recipients []string `json:"recipients"`
+	Success    bool     `json:"success"`
+	Recipients []string `json:"recipients"`
 }

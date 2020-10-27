@@ -167,6 +167,41 @@ func UpdateStatusFriend(dbconn *sql.DB, requestor string, tagert string, status 
 	}
 }
 
+//List all email addresses that can receive updates from an email address.
+func GetAllEmailReceiveUpdate(dbconn *sql.DB, mailAdress string) (*model_common.ListFriendsRecviceUpdateRespone, error) {
+	IsExist, err := CheckEmailInTableFriendship(dbconn, mailAdress)
+	if err != nil {
+		return nil, errors.New("Check exist email error: " + err.Error())
+	}
+
+	if IsExist == false {
+		return nil, errors.New("User not found!")
+	}
+
+	var row *sql.Rows
+	count := 0
+
+	sqlStatement := `select f1.user_two_email email from friends as f1 where f1.user_one_email = $1 AND f1.update_status = true UNION ALL select f2.user_one_email email from friends as f2 where f2.user_two_email = $1 AND f2.update_status = true`
+	row, err = dbconn.Query(sqlStatement, mailAdress)
+	if err != nil {
+		return nil, errors.New("List friends query error: " + err.Error())
+	}
+
+	var list_friend model_common.ListFriendsRecviceUpdateRespone
+
+	for row.Next() {
+		var friend string
+		err := row.Scan(&friend)
+		if err != nil {
+			return nil, errors.New("List friends scan error: " + err.Error())
+		}
+		list_friend.Recipients = append(list_friend.Recipients, friend)
+		count++
+	}
+	list_friend.Success = true
+	return &list_friend, nil
+}
+
 //Check Two email was friend?
 func CheckIsFriendShip(dbconn *sql.DB, UserOne string, UserTwo string) (bool, error) {
 	var rs *sql.Rows

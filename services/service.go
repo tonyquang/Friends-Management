@@ -7,11 +7,14 @@ import (
 	repo "friends_management/repository"
 	"net/http"
 	"regexp"
+	"strconv"
 )
 
 type Service interface {
 	AddFriend(RequestAddFriend model_req.AddFriendRequest) (*model_common.CommonRespone, *model_common.ResponseError)
-	UnFriend(RequestAddFriend model_req.UnFriendRequest) (*model_common.CommonRespone, *model_common.ResponseError)
+	UnFriend(friendship_id string) (*model_common.CommonRespone, *model_common.ResponseError)
+	ViewListFriendsByEmail(email string) (*model_common.ListFriendsRespone, *model_common.ResponseError)
+	ViewListCommonFriendsByEmail(RequestAddFriend model_req.AddFriendRequest) (*model_common.ListFriendsRespone, *model_common.ResponseError)
 }
 
 // Manager is the implementation of recurring service
@@ -51,27 +54,58 @@ func (m *Manager) AddFriend(RequestAddFriend model_req.AddFriendRequest) (*model
 }
 
 // UnFriends Between Two User
-func (m *Manager) UnFriend(RequestUnFriend model_req.UnFriendRequest) (*model_common.CommonRespone, *model_common.ResponseError) {
+func (m *Manager) UnFriend(friendship_id string) (*model_common.CommonRespone, *model_common.ResponseError) {
 
-	if len(RequestUnFriend.Friends) < 2 {
+	id, err := strconv.Atoi(friendship_id)
+	if err != nil {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "Param not valid"}
+	}
+
+	commonRespone, err := repo.DeleteFriendship(m.dbconn, id)
+
+	if err != nil {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: err.Error()}
+	}
+
+	return commonRespone, nil
+
+}
+
+//View list friends of an user by email
+func (m *Manager) ViewListFriendsByEmail(mailAdress string) (*model_common.ListFriendsRespone, *model_common.ResponseError) {
+	if m.checkIsValidEmail(mailAdress) == false {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "Email not valid"}
+	}
+
+	listfriend, err := repo.GetListFriendByEmail(m.dbconn, mailAdress)
+
+	if err != nil {
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: err.Error()}
+	}
+
+	return listfriend, nil
+}
+
+//View list commmon friends of two user
+func (m *Manager) ViewListCommonFriendsByEmail(RequestAddFriend model_req.AddFriendRequest) (*model_common.ListFriendsRespone, *model_common.ResponseError) {
+	if len(RequestAddFriend.Friends) < 2 {
 		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "User One Or User Two Not Allow Empty!"}
 	}
 
-	UserOne := RequestUnFriend.Friends[0]
-	UserTwo := RequestUnFriend.Friends[1]
+	UserOne := RequestAddFriend.Friends[0]
+	UserTwo := RequestAddFriend.Friends[1]
 
 	if m.checkIsValidEmail(UserOne) == false || m.checkIsValidEmail(UserTwo) == false {
 		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: "Format user is not valid, User should be an email address!"}
 	}
 
-	commonRespone, err := repo.DeleteFriendship(m.dbconn, UserOne, UserTwo)
+	listCommonFriend, err := repo.GetCommonFriendsListByEmail(m.dbconn, UserOne, UserTwo)
 
 	if err != nil {
-		return nil, &model_common.ResponseError{Code: http.StatusInternalServerError, Description: err.Error()}
+		return nil, &model_common.ResponseError{Code: http.StatusBadRequest, Description: err.Error()}
 	}
 
-	return commonRespone, nil
-
+	return listCommonFriend, nil
 }
 
 func (m *Manager) checkIsValidEmail(mail string) bool {

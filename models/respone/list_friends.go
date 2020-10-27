@@ -1,7 +1,7 @@
 package response
 
 type ListFriendsRespone struct {
-	success bool     `json:"success"`
-	friends []string `json:"friends"`
-	count   int      `json:"count"`
+	Success     bool     `json:"success"`
+	ListFriends []string `json:"friends"`
+	Count       int      `json:"count"`
 }

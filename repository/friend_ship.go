@@ -27,7 +27,7 @@ func InsertFriendship(dbconn *sql.DB, UserOne string, UserTwo string) (*model_co
 	return &model_common.CommonRespone{Success: true}, nil
 }
 
-// DeleteFriendship friendship to DB
+// Delete Friendship to DB
 func DeleteFriendship(dbconn *sql.DB, id int) (*model_common.CommonRespone, error) {
 	IsFriendship, err := CheckFriendShipExist(dbconn, id)
 

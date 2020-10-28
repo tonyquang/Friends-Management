@@ -67,7 +67,7 @@ func ListCommonFriendHandler(c *gin.Context, service services.Service) {
 	utils.Respone(res, err, c)
 }
 
-func SubscribeUpdateHanler(c *gin.Context, service services.Service) {
+func SubscribeUpdateHandler(c *gin.Context, service services.Service) {
 	var requestor, target string = "", ""
 
 	requestor = c.Param("requestor")
@@ -82,7 +82,7 @@ func SubscribeUpdateHanler(c *gin.Context, service services.Service) {
 	utils.Respone(res, err, c)
 }
 
-func BlockUpdateHanler(c *gin.Context, service services.Service) {
+func BlockUpdateHandler(c *gin.Context, service services.Service) {
 	var requestor, target string = "", ""
 
 	requestor = c.Param("requestor")
@@ -97,7 +97,7 @@ func BlockUpdateHanler(c *gin.Context, service services.Service) {
 	utils.Respone(res, err, c)
 }
 
-func ReceviceUserCanUpdate(c *gin.Context, service services.Service) {
+func ReceviceUserCanUpdateHandler(c *gin.Context, service services.Service) {
 	var sender string = ""
 
 	sender = c.Param("sender")

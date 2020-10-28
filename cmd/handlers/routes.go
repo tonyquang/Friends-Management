@@ -13,14 +13,8 @@ import (
 func API(dbconn *sql.DB) http.Handler {
 	friendshipService := services.NewManager(dbconn)
 	gin.SetMode(gin.ReleaseMode)
-	//fmt.Println("%T", friendshipService)
+
 	r := gin.Default()
-	// r.POST("api/users", func(c *gin.Context) {
-	// 	AddFriendHandler(c, friendshipService)
-	// })
-	// r.DELETE("api/users", func(c *gin.Context) {
-	// 	UnFriendHandler(c, friendshipService)
-	// })
 
 	g := r.Group("/api")
 	{
@@ -34,7 +28,7 @@ func API(dbconn *sql.DB) http.Handler {
 		})
 
 		g.GET("/friendsrecvupdate/:sender", func(c *gin.Context) {
-			ReceviceUserCanUpdate(c, friendshipService)
+			ReceviceUserCanUpdateHandler(c, friendshipService)
 		})
 
 		g.POST("/addfriend", func(c *gin.Context) {
@@ -46,11 +40,11 @@ func API(dbconn *sql.DB) http.Handler {
 		})
 
 		g.PUT("/subscribe/:requestor/:target", func(c *gin.Context) {
-			SubscribeUpdateHanler(c, friendshipService)
+			SubscribeUpdateHandler(c, friendshipService)
 		})
 
 		g.PUT("/block/:requestor/:target", func(c *gin.Context) {
-			BlockUpdateHanler(c, friendshipService)
+			BlockUpdateHandler(c, friendshipService)
 		})
 
 	}
